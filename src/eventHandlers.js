@@ -1,7 +1,9 @@
+import {customProperty, getDefaultText, restoreDefaultText} from './util'
 import Selector from './selector'
-import { restoreDefaultText } from './util'
 
 const fileApi = !!window.File
+
+
 
 const getSelectedFiles = (input) => {
   if (input.hasAttribute('multiple') && fileApi) {
@@ -14,11 +16,22 @@ const getSelectedFiles = (input) => {
   }
 }
 
-function handleInputChange() {
-  const label = this.parentNode.querySelector(Selector.CUSTOMFILELABEL)
+function handleInputChange(e) {
+  const input = e.target
+  if(input && input.matches(Selector.CUSTOMFILE)) {
+    if (!input.hasOwnProperty(customProperty)) {
+      Object.defineProperty(input, customProperty, {
+        value: {
+          defaultText: getDefaultText(input),
+        },
+        writable: true,
+      })
+    }
+    const label = input.parentNode.querySelector(Selector.CUSTOMFILELABEL)
 
-  if (label) {
-    label.innerHTML = getSelectedFiles(this)
+    if (label) {
+      label.innerHTML = getSelectedFiles(input)
+    }
   }
 }
 

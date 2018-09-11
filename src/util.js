@@ -21,7 +21,10 @@ const restoreDefaultText = (input) => {
   }
 }
 
+const customProperty = 'bsCustomFileInput'
+
 export {
   getDefaultText,
   restoreDefaultText,
+  customProperty,
 }

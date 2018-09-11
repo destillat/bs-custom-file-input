@@ -9,6 +9,12 @@
   (global.bsCustomFileInput = factory());
 }(this, (function () { 'use strict';
 
+  (function () {
+    if (!Element.prototype.matches) {
+      Element.prototype.matches = Element.prototype.msMatchesSelector;
+    }
+  })();
+
   var Selector = {
     CUSTOMFILE: '.custom-file input[type="file"]',
     CUSTOMFILELABEL: '.custom-file-label',
@@ -35,6 +41,8 @@
     }
   };
 
+  var customProperty = 'bsCustomFileInput';
+
   var fileApi = !!window.File;
 
   var getSelectedFiles = function getSelectedFiles(input) {
@@ -48,11 +56,24 @@
     }
   };
 
-  function handleInputChange() {
-    var label = this.parentNode.querySelector(Selector.CUSTOMFILELABEL);
+  function handleInputChange(e) {
+    var input = e.target;
 
-    if (label) {
-      label.innerHTML = getSelectedFiles(this);
+    if (input && input.matches(Selector.CUSTOMFILE)) {
+      if (!input.hasOwnProperty(customProperty)) {
+        Object.defineProperty(input, customProperty, {
+          value: {
+            defaultText: getDefaultText(input)
+          },
+          writable: true
+        });
+      }
+
+      var label = input.parentNode.querySelector(Selector.CUSTOMFILELABEL);
+
+      if (label) {
+        label.innerHTML = getSelectedFiles(input);
+      }
     }
   }
 
@@ -70,9 +91,6 @@
     INPUTFOCUSIN: 'focusin',
     INPUTFOCUSOUT: 'focusout'
   };
-  var customProperty = 'bsCustomFileInput';
-  var customFormSelector = null;
-  var customInputSelector = null;
   var bsCustomFileInput = {
     init: function init(inputSelector, formSelector) {
       if (inputSelector === void 0) {
@@ -83,29 +101,18 @@
         formSelector = Selector.FORM;
       }
 
-      customInputSelector = inputSelector;
-      customFormSelector = formSelector;
-      var customFileInputList = [].slice.call(document.querySelectorAll(customInputSelector));
-      var formList = [].slice.call(document.querySelectorAll(customFormSelector));
+      Selector.CUSTOMFILE = inputSelector;
+      Selector.FORM = formSelector;
+      document.addEventListener(Event.INPUTCHANGE, handleInputChange);
+      var formList = [].slice.call(document.querySelectorAll(Selector.FORM));
 
-      for (var i = 0, len = customFileInputList.length; i < len; i++) {
-        var input = customFileInputList[i];
-        Object.defineProperty(input, customProperty, {
-          value: {
-            defaultText: getDefaultText(input)
-          },
-          writable: true
-        });
-        input.addEventListener(Event.INPUTCHANGE, handleInputChange);
-      }
-
-      for (var _i = 0, _len = formList.length; _i < _len; _i++) {
-        formList[_i].addEventListener(Event.FORMRESET, handleFormReset);
+      for (var i = 0, len = formList.length; i < len; i++) {
+        formList[i].addEventListener(Event.FORMRESET, handleFormReset);
       }
     },
     destroy: function destroy() {
-      var formList = [].slice.call(document.querySelectorAll(customFormSelector));
-      var customFileInputList = [].slice.call(document.querySelectorAll(customInputSelector)).filter(function (input) {
+      var formList = [].slice.call(document.querySelectorAll(Selector.FORM));
+      var customFileInputList = [].slice.call(document.querySelectorAll(Selector.CUSTOMFILE)).filter(function (input) {
         return !!input.bsCustomFileInput;
       });
 
@@ -113,11 +120,11 @@
         var input = customFileInputList[i];
         restoreDefaultText(input);
         input[customProperty] = undefined;
-        input.removeEventListener(Event.INPUTCHANGE, handleInputChange);
+        document.removeEventListener(Event.INPUTCHANGE, handleInputChange);
       }
 
-      for (var _i2 = 0, _len2 = formList.length; _i2 < _len2; _i2++) {
-        formList[_i2].removeEventListener(Event.FORMRESET, handleFormReset);
+      for (var _i = 0, _len = formList.length; _i < _len; _i++) {
+        formList[_i].removeEventListener(Event.FORMRESET, handleFormReset);
       }
     }
   };

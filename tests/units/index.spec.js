@@ -37,8 +37,8 @@ describe('index.js', function () {
       expect(input.bsCustomFileInput.defaultText).equal(label.innerHTML)
     })
 
-    it('should add listener to the given input', function () {
-      var spy = sinon.spy(input, 'addEventListener')
+    it('should add listener to the document', function () {
+      var spy = sinon.spy(document, 'addEventListener')
 
       bsCustomFileInput.init()
 
